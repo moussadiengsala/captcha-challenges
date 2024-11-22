@@ -1,0 +1,12 @@
+<p>image-captcha works!</p>
+<p>{{ challenge()?.challenge?.message }}</p>
+<div>
+    <app-custom-radio
+        [options]="challenge()?.all"
+        [userSelect]="userSelect"
+      ></app-custom-radio>
+</div>
+<button type="button" (click)="refresh()">refresh</button>
+<button type="button" (click)="verify()">verify</button>
+
+<app-alert />

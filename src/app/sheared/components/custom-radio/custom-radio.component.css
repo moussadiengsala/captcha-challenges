@@ -1,0 +1,9 @@
+
+.radio-option.selected {
+  border-color: #007bff;
+  background-color: #f0f7ff;
+}
+
+.radio-option.selected .checkmark {
+  background-color: #007bff;
+}

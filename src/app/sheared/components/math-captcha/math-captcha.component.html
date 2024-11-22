@@ -1,0 +1,18 @@
+<p>math-captcha works!</p>
+<div>
+    <span>{{problem()?.num1}}</span>
+    <span>{{problem()?.operator}}</span>
+    <span>{{problem()?.num2}}</span>
+
+    <input type="text" [formControl]="userAnswer" />
+</div>
+
+<div>
+    <button *ngFor="let level of [Difficulty.Easy, Difficulty.Normal, Difficulty.Hard]" (click)="this.changeDifficulty(level)">
+        {{ level }}
+    </button>
+</div>
+
+
+<button type="button" (click)="verify()">verify</button>
+<app-alert />

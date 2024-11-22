@@ -1,0 +1,8 @@
+<p>text-captcha works!</p>
+<canvas width="250" height="100" className="border mb-4"></canvas>
+
+<label for="user-input"> enter the captcha code</label>
+<input id="user-input" type="text" [formControl]="userInput">
+<button type="button" (click)="refreshCaptcha()">refresh captcha</button>
+<button type="button" (click)="verify()">verify</button>
+<app-alert />

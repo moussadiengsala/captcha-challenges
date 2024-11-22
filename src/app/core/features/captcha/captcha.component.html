@@ -1,0 +1,19 @@
+<p>captcha works!</p>
+<div>
+    <div *ngFor="let page of captchatService.getPages(); trackBy: trackByFn">
+        <div>
+            {{ page.title }}
+        </div>
+    </div>
+</div>
+<form action="" [formGroup]="challenges" (submit)="captchatService.handleSubmit($event)">
+    <app-text-captcha *ngIf="captchatService.getStep() === 1" />
+    <app-math-captcha *ngIf="captchatService.getStep() === 2" />
+    <app-image-captcha *ngIf="captchatService.getStep() === 3" />
+
+    <br>
+    <input type="submit" value="submit" >
+</form>
+
+<button *ngIf="captchatService.getStep() != 1" (click)="captchatService.prevHandler()">prev</button><br>
+<button *ngIf="captchatService.getStep() != 3" (click)="captchatService.nextHandler()">next</button>
