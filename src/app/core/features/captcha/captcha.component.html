@@ -1,19 +1,66 @@
-<p>captcha works!</p>
-<div>
-    <div *ngFor="let page of captchatService.getPages(); trackBy: trackByFn">
-        <div>
-            {{ page.title }}
+<div class="min-h-screen py-10 px-6">
+    <div class="flex flex-col mx-auto gap-6 desktop:flex-row">
+        <!-- Sidebar for Steps -->
+        <div class="w-full desktop:w-1/4 p-4">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Steps</h2>
+            <ul class="space-y-4 flex flex-row desktop:flex-col">
+                <li *ngFor="let page of captchaService.getPages(); let i = index; trackBy: trackByFn"
+                    class="flex items-center gap-4 p-2 rounded-lg cursor-pointer"
+                    [ngClass]="{'bg-indigo-100 text-indigo-700': captchaService.getStep() === i + 1, 'text-gray-600': captchaService.getStep() !== i + 1}"
+                    >
+                    <div class="w-8 flex items-center justify-center rounded-full"
+                        [ngClass]="{'bg-indigo-600 text-white': page.isComplete, 'bg-gray-200': !page.isComplete}">
+                        <span *ngIf="!page.isComplete" class="text-sm">{{ i + 1 }}</span>
+                        <svg *ngIf="page.isComplete" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20" class="w-5 h-5">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 00-1.414 0L9 11.586l-2.293-2.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l7-7a1 1 0 000-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="font-medium">{{ page.title }}</p>
+                        <p class="text-sm">{{page.descriptions}}</p>
+                    </div>
+                </li>
+            </ul>
         </div>
+  
+      <!-- Challenge Content -->
+      <div class="w-full desktop:w-3/4 p-6">
+        <form [formGroup]="challenges" (ngSubmit)="captchaService.handleSubmit($event)">
+          <!-- Challenge Components -->
+          <div class="mb-6">
+            <app-text-captcha *ngIf="captchaService.getStep() === 1"></app-text-captcha>
+            <app-math-captcha *ngIf="captchaService.getStep() === 2"></app-math-captcha>
+            <app-image-captcha *ngIf="captchaService.getStep() === 3"></app-image-captcha>
+          </div>
+  
+          <!-- Navigation Buttons -->
+          <div class="flex justify-between">
+            <button type="button" *ngIf="!isFirstStep()"
+                    (click)="captchaService.prevHandler()"
+                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+              Previous
+            </button>
+            <button [type]="isLastStep() ? 'submit' : 'button'"
+                    (click)="!isLastStep() ? captchaService.nextHandler() : null"
+                    class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+              {{ isLastStep() ? 'Submit' : 'Next' }}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
-</div>
-<form action="" [formGroup]="challenges" (submit)="captchatService.handleSubmit($event)">
-    <app-text-captcha *ngIf="captchatService.getStep() === 1" />
-    <app-math-captcha *ngIf="captchatService.getStep() === 2" />
-    <app-image-captcha *ngIf="captchatService.getStep() === 3" />
-
-    <br>
-    <input type="submit" value="submit" >
-</form>
-
-<button *ngIf="captchatService.getStep() != 1" (click)="captchatService.prevHandler()">prev</button><br>
-<button *ngIf="captchatService.getStep() != 3" (click)="captchatService.nextHandler()">next</button>
+  </div>
+  
+  <style>
+    @media (max-width: 640px) {
+      .flex {
+        flex-direction: column;
+        gap: 1rem;
+      }
+  
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+  

@@ -22,6 +22,7 @@ export class ImageCaptchaComponent {
     page?: Page
 
     constructor(private captchaService: CaptchaService, private alertService: AlertService) {
+      this.alertService.clear()
       afterRender(() => {
         console.log(this.userSelect.value)
       }) 
@@ -95,7 +96,6 @@ export class ImageCaptchaComponent {
         return;
       }
   
-      
       const maxAttempts = this.captchaService.getMaxAttempts();
       this.page.attempts += 1;
   
@@ -118,8 +118,7 @@ export class ImageCaptchaComponent {
           );
           return;
         }
-  
-        this.page.metadata.userInput = ''
+
         this.alertService.error('Verification Failed', 'Incorrect captcha code. Please try again.');
       }
     }

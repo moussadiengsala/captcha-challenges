@@ -5,12 +5,24 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { CaptchaService } from '../../../core/services/captcha/captcha.service';
 import { AlertService } from '../../../core/services/alert/alert.service';
 import { AlertComponent } from '../alert/alert.component';
+import { animate, style, transition, trigger } from '@angular/animations';
 
 @Component({
   selector: 'app-text-captcha',
   imports: [ReactiveFormsModule, AlertComponent],
   templateUrl: './text-captcha.component.html',
-  styleUrl: './text-captcha.component.css'
+  styleUrl: './text-captcha.component.css',
+  animations: [
+    trigger('fadeInOut', [
+      transition(':enter', [
+        style({ opacity: 0 }),
+        animate('300ms ease-out', style({ opacity: 1 }))
+      ]),
+      transition(':leave', [
+        animate('300ms ease-in', style({ opacity: 0 }))
+      ])
+    ])
+  ]
 })
 export class TextCaptchaComponent {
   captcha = signal('');
@@ -23,7 +35,9 @@ export class TextCaptchaComponent {
     private elementRef: ElementRef,
     private captchaService: CaptchaService,
     private alertService: AlertService
-  ) {}
+  ) {
+    this.alertService.clear()
+  }
 
   ngOnInit(): void {
     this.initializeCaptcha();

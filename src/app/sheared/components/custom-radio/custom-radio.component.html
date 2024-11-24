@@ -1,34 +1,39 @@
-<p>custom-radio works!</p>
-  
-<div class="flex flex-col gap-2 w-full">
-    <div 
-      *ngFor="let option of options(); let i = index; trackBy: trackByFn" 
-      class="radio-option flex items-center border-2 border-sky-600 rounded-md p-1 cursor-pointer transition-all hover:border-sky-500"
-      [class.selected]="userSelect().at(i).value === option.id"
-      (click)="onSelectionChange(option.id, i)"
-    >
-      <div class="radio-input relative mr-4">
-        <input 
-          class=" opacity-0 absolute cursor-pointer"
-          type="radio" 
-          name="captcha-image"
-          [value]="option.id"
-          [checked]="userSelect().at(i).value === option.id"
-          [formControl]="userSelect().at(i)"
-          (change)="onSelectionChange(option.id, i)"
-        />
-        <span class="checkmark absolute top-0 left-0 h-5 w-5 rounded-lg bg-sky-400"></span>
+<!-- Custom Radio Component -->
+<div class="w-full mx-auto space-y-4">
+  <div class="gap-3 w-full grid grid-cols-3 h-fit">
+    <div *ngFor="let option of options(); let i = index; trackBy: trackByFn"
+         class="relative flex items-center border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:bg-sky-50"
+         [class.border-sky-600]="userSelect().at(i).value === option.id"
+         [class.border-gray-200]="userSelect().at(i).value !== option.id"
+         (click)="onSelectionChange(option.id, i)">
+      
+      <!-- Radio Input Circle -->
+      <div class="relative mr-4 flex-shrink-0">
+        <div class="w-6 h-6 border-2 rounded-full transition-colors duration-200"
+             [class.border-sky-600]="userSelect().at(i).value === option.id"
+             [class.border-gray-300]="userSelect().at(i).value !== option.id">
+          <div class="absolute inset-0 m-1 rounded-full transition-all duration-200"
+               [class.bg-sky-600]="userSelect().at(i).value === option.id">
+          </div>
+        </div>
       </div>
+
+      <!-- Content -->
       <div class="flex-grow">
-        <div class="font-bold text-base items-center">
-          <span *ngIf="option.icon" class="mr-2">
-            <i [class]="option.icon"></i>
+        <div class="flex items-center">
+          <span *ngIf="option.icon" 
+                class="mr-2 text-gray-600">
+            {{ option.icon }}
           </span>
-          {{ option.name }}
+          <span class="font-medium text-gray-900">
+            {{ option.name }}
+          </span>
         </div>
-        <div *ngIf="option.icon" class="mt-1 text-md">
-          {{ option.icon }}
-        </div>
+        <!-- <p *ngIf="option.description" 
+           class="mt-1 text-sm text-gray-500">
+          {{ option.description }}
+        </p> -->
       </div>
     </div>
+  </div>
 </div>

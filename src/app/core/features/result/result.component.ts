@@ -1,12 +1,12 @@
 import { Component } from '@angular/core';
 import { CaptchaService } from '../../services/captcha/captcha.service';
 import { Page, Pages, PageType, ResultCaptchaImage, ResultCaptchaMath, ResultCaptchaText } from '../../../sheared/utils';
-import { NgClass, NgFor, NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
+import { NgClass, NgFor, NgIf, NgSwitch, NgSwitchCase, NgSwitchDefault } from '@angular/common';
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-result',
-  imports: [NgFor, NgClass, NgSwitch, NgSwitchCase, NgIf],
+  imports: [NgFor, NgClass, NgSwitch, NgSwitchCase, NgIf, NgSwitchDefault],
   templateUrl: './result.component.html',
   styleUrl: './result.component.css'
 })
@@ -15,6 +15,10 @@ export class ResultComponent {
 
   constructor(public captchaService: CaptchaService, private router: Router) {
     this.results = this.captchaService.getPages();
+    if (this.getCompletedCount() != 3) {
+      this.router.navigate(['/challenges']);
+      return;
+    }
   }
 
   getIconClass(type: PageType): string {
@@ -33,11 +37,6 @@ export class ResultComponent {
       case PageType.Image: return page.title || 'Image Selection';
       default: return page.title || 'Verification';
     }
-  }
-
-  getCompletionPercentage(): number {
-    const completed = this.getCompletedCount();
-    return Math.round((completed / this.results.length) * 100);
   }
 
   getCompletedCount(): number {
@@ -59,6 +58,18 @@ export class ResultComponent {
       default:
         return false;
     }
+  }
+
+  getImageChallengeResult(metadata: ResultCaptchaImage | null) {
+    if (!metadata) return [];
+    const solution  = metadata.imageCptcha?.solutions.map(icon => icon.id)
+    const selected = metadata.userInput?.filter(id => id != null)
+    return metadata.imageCptcha?.all.map(d => ({
+      icon: d.icon,
+      name: d.name,
+      isCorrect: solution?.includes(d.id),
+      isSelected: selected?.includes(d.id),
+    }))
   }
 
   getNewSession() {

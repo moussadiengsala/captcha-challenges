@@ -1,18 +1,65 @@
-<p>math-captcha works!</p>
-<div>
-    <span>{{problem()?.num1}}</span>
-    <span>{{problem()?.operator}}</span>
-    <span>{{problem()?.num2}}</span>
+<div class="max-w-4xl mx-auto px-6 mb-6">
+  <div class="mb-7">
+    <h1 class="text-2xl text-center font-semibold text-gray-800">{{page?.title}}</h1> 
+    <p class="text-center text-gray-600">{{page?.header}}</p>
+  </div>
 
-    <input type="text" [formControl]="userAnswer" />
+    <!-- Problem Display -->
+    <div class="flex items-center justify-center space-x-4 mb-6">
+      <span class="text-3xl font-bold text-gray-700">{{ problem()?.num1 }}</span>
+      <span class="text-3xl font-medium text-gray-600">{{ problem()?.operator }}</span>
+      <span class="text-3xl font-bold text-gray-700">{{ problem()?.num2 }}</span>
+    </div>
+  
+    <!-- User Answer Input -->
+    <div class="flex justify-center mb-6">
+      <input
+        type="text"
+        [formControl]="userAnswer"
+        class="w-48 px-4 py-2 text-center text-lg border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+        placeholder="Your answer"
+      />
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex justify-between items-end mb-6">
+
+      <!-- Verify Button -->
+      <div class="">
+        <button
+          type="button"
+          (click)="verify()"
+          class="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
+        >
+          Verify
+        </button>
+      </div>
+
+      <!-- Difficulty Level Buttons -->
+      <div class="flex flex-col justify-center gap-4">
+        <span class=" text-sm text-gray-700">Toggle Difficulty</span>
+        <div class="flex justify-center gap-4">
+          <button
+            type="button"
+            *ngFor="let level of [Difficulty.Easy, Difficulty.Normal, Difficulty.Hard]"
+            (click)="changeDifficulty(level)"
+            class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+          >
+            {{ level }}
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Alert Component -->
+    <app-alert class="mt-4" />
 </div>
 
-<div>
-    <button *ngFor="let level of [Difficulty.Easy, Difficulty.Normal, Difficulty.Hard]" (click)="this.changeDifficulty(level)">
-        {{ level }}
-    </button>
-</div>
+<style>
+  @media (max-width: 640px) {
+    .flex {
+      flex-direction: column;
+    }
 
-
-<button type="button" (click)="verify()">verify</button>
-<app-alert />
+ }
+</style>

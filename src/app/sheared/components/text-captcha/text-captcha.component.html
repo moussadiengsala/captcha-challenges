@@ -1,8 +1,24 @@
-<p>text-captcha works!</p>
-<canvas width="250" height="100" className="border mb-4"></canvas>
 
-<label for="user-input"> enter the captcha code</label>
-<input id="user-input" type="text" [formControl]="userInput">
-<button type="button" (click)="refreshCaptcha()">refresh captcha</button>
-<button type="button" (click)="verify()">verify</button>
-<app-alert />
+
+
+<div class="w-full px-6 mb-4">
+    <div class="mb-7">
+        <h1 class="text-2xl text-center font-semibold text-gray-800">{{page?.title}}</h1> 
+        <p class="text-center text-gray-600">{{page?.header}}</p>
+    </div>
+
+    <canvas width="250" height="100" class="border mb-4"></canvas>
+    <label for="user-input" class="block text-sm font-medium text-gray-700 mb-2">Enter the captcha code:</label>
+    <input id="user-input" type="text" [formControl]="userInput" class="w-full px-4 py-2 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+    <div class="flex gap-4">
+      <button type="button" (click)="refreshCaptcha()" class="flex items-center justify-center px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        Refresh
+      </button>
+      <button type="button" (click)="verify()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Verify</button>
+    </div>
+    <app-alert class="mt-4"></app-alert>
+</div>
+

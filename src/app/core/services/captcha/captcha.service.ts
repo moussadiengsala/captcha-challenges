@@ -64,7 +64,9 @@ export class CaptchaService {
           id: 'page-1',
           type: PageType.Text,
           index: 0,
-          title: 'Text Captcha',
+          title: 'Text Verification',
+          header: 'Please enter the text shown below',
+          descriptions: 'Type the characters you see in the image. Letters are not case-sensitive.',
           isComplete: false,
           attempts: 0,
           metadata: {
@@ -77,7 +79,9 @@ export class CaptchaService {
           id: 'page-2',
           type: PageType.Math,
           index: 1,
-          title: 'Math Captcha',
+          title: 'Math Challenge',
+          header: 'Solve this simple math problem',
+          descriptions: 'Solve mathematical equation shown below. Enter only numbers as your answer.',
           isComplete: false,
           attempts: 0,
           metadata: {
@@ -91,7 +95,9 @@ export class CaptchaService {
           id: 'page-3',
           type: PageType.Image,
           index: 2,
-          title: 'Image Captcha',
+          title: 'Image Recognition',
+          header: 'Select matching images',
+          descriptions: 'Click or tap on all images that match the description. Click verify once you\'re done.',
           isComplete: false,
           attempts: 0,
           metadata: {

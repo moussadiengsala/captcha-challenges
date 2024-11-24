@@ -48,8 +48,10 @@ export interface Page {
     id: string; // Unique identifier for the page
     type: PageType; // Page type from the enum
     index: number; // Order or position in the form
-    title?: string; // Optional title for the page
+    title: string; // Optional title for the page
     isComplete: boolean; // Flag to indicate whether the page has been completed
+    descriptions: string; //
+    header: string; //
     attempts: number
     metadata: ResultCaptchaText | ResultCaptchaMath | ResultCaptchaImage
 }

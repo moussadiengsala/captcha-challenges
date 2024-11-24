@@ -1,2 +1,45 @@
-<p>home works!</p>
-<a routerLink="/challenges" routerLinkActive="router-link-active">Start Challenges</a>
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-200 py-12 px-6">
+    <div class="max-w-5xl mx-auto space-y-12">
+      <!-- Hero Section -->
+      <div class="text-center space-y-6">
+        <h1 class="text-5xl font-extrabold text-gray-900 tracking-tight">
+          Welcome to <span class="text-indigo-600">Angul-It</span>
+        </h1>
+        <p class="text-lg text-gray-700 leading-relaxed">
+          Test your human intuition with our innovative and fun captcha challenges.
+        </p>
+        <button mat-raised-button color="primary" 
+          class="mt-8 px-6 py-3 bg-indigo-600 text-white rounded-lg shadow-lg hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none flex items-center space-x-2"
+          (click)="startChallenges()">
+          <span>Start Challenges</span>
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </div>
+  
+      <!-- How It Works Section -->
+      <mat-card class="shadow-lg rounded-lg overflow-hidden">
+        <mat-card-header class="bg-indigo-600 text-white">
+          <mat-card-title class="text-2xl font-semibold">How It Works</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="space-y-6 py-6">
+            <div *ngFor="let step of steps" class="flex items-start gap-6">
+              <div class="flex-shrink-0 w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center shadow-md text-lg font-semibold">
+                {{step.number}}
+              </div>
+              <div>
+                <h3 class="text-xl font-medium text-gray-800">{{step.title}}</h3>
+                <p class="text-gray-600 leading-relaxed">{{step.description}}</p>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+        <mat-card-footer class="bg-gray-50 px-6 py-4">
+          <p class="text-sm text-gray-600">
+            Your progress is automatically saved. Return anytime to continue where you left off.
+          </p>
+        </mat-card-footer>
+      </mat-card>
+    </div>
+  </div>
+  

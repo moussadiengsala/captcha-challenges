@@ -21,7 +21,9 @@ export class MathCaptchaComponent {
     Difficulty = Difficulty;
     page?: Page
 
-    constructor(private captchaService: CaptchaService, private alertService: AlertService) {}
+    constructor(private captchaService: CaptchaService, private alertService: AlertService) {
+      this.alertService.clear()
+    }
 
     ngOnInit(): void { 
       this.page = this.captchaService.getPage(PageType.Math)
@@ -58,7 +60,7 @@ export class MathCaptchaComponent {
       }
 
       this.captchaService.resetPages(PageType.Math);
-      this.page = this.captchaService.getPage(PageType.Text);
+      this.page = this.captchaService.getPage(PageType.Math);
       if (!this.captchaService.isMathCaptcha(this.page?.metadata)) {
         this.alertService.error('Error', "Can't change the difficulty. Please refresh the page.");
         return;
