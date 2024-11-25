@@ -70,7 +70,7 @@ export type ResultCaptchaText = {
 export type ResultCaptchaMath = {
     problems: Problem | null
     userInput: string
-    difficulty: Difficulty
+    difficulty: Difficulty | null
     isValid: boolean
 }
 

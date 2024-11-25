@@ -2,60 +2,176 @@ import { Injectable } from '@angular/core';
 import { Difficulty, Page, Pages, PageType, ResultCaptchaImage, ResultCaptchaMath, ResultCaptchaText } from '../../../sheared/utils';
 import { AlertService } from '../alert/alert.service';
 import { Router } from '@angular/router';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
+
+
+
 export class CaptchaService {
-  private readonly MAX_ATTEMPTS = 3
-  private static readonly STORAGE_KEY = 'captchaPages';
-  private pages: Pages = this.loadFromStorage()
-  constructor(private alertService: AlertService, private router: Router) { }
+  private readonly MAX_ATTEMPTS = 3;
+  private readonly STORAGE_KEY = 'captchaPages';
+  private readonly EXPIRY_TIME = 30 * 60 * 1000; // 30 minutes
 
-  getPages(): Page[] {
-    return [...this.pages.pages]; 
+  private pages: Pages;
+  private attemptsMap: Map<string, number> = new Map();
+  private pageMap: Map<string, Page> = new Map();
+
+  constructor(
+    private alertService: AlertService, 
+    private router: Router
+  ) {
+    this.alertService.clear();
+    this.pages = this.loadFromStorage();
+    this.initializeAttemptsMap();
+    this.initializepageMap()
   }
 
-  getStep(): number {
-    return this.pages.step
+  private initializeAttemptsMap(): void {
+    this.pages.pages.forEach(page => {
+      this.attemptsMap.set(page.id, page.attempts);
+    });
   }
 
-  getMaxAttempts() { return this.MAX_ATTEMPTS; }
+  private initializepageMap(): void {
+    this.pages.pages.forEach(page => {
+      this.pageMap.set(page.id, page);
+    });
+  }
 
-  getPage(pageType: PageType): Page | undefined {
+  public getPages(): Page[] {
+    return [...this.pages.pages];
+  }
+
+  public getStep(): number {
+    return this.pages.step;
+  }
+
+  public getMaxAttempts(): number {
+    return this.MAX_ATTEMPTS;
+  }
+
+  public getPage(pageType: PageType): Page | undefined {
     return this.pages.pages.find((p) => p.type === pageType);
   }
 
-  resetPages(pageType: PageType): void {
+  public getRemainingAttempts(pageId: string): number {
+    const attempts = this.attemptsMap.get(pageId) || 0;
+    return Math.max(0, this.MAX_ATTEMPTS - attempts);
+  }
+
+  public isPageLocked(pageId: string): boolean {
+    const attempts = this.attemptsMap.get(pageId) || 0;
+    const page = this.pageMap.get(pageId);
+    return (attempts >= this.MAX_ATTEMPTS) || (!!page && page.metadata.isValid);
+  }
+
+  public resetPages(pageType: PageType): void {
     const currentPages = this.loadFromStorage();
-    const defaultPages = this.getDefaultPages();
-  
-    // Filter and reset specific page type
+    
     const updatedPages = currentPages.pages.map((page) => {
       if (page.type === pageType) {
-        const defaultPage = defaultPages.pages.find((p) => p.type === pageType);
-        return defaultPage ? { ...defaultPage } : page;
+        const defaultPage = this.pageMap.get(page.id);
+        if (!defaultPage) return page;
+
+        // Preserve the attempts count while resetting other metadata
+        const currentAttempts = this.attemptsMap.get(page.id) || 0;
+        return {
+          ...defaultPage,
+          attempts: currentAttempts,
+          isComplete: currentAttempts >= 1
+        }
       }
       return page;
     });
-  
+
     this.pages.pages = updatedPages;
     this.saveToStorage();
   }
-  
-  newSession() {
+
+  public incrementAttempts(pageId: string): number {
+    const currentAttempts = this.attemptsMap.get(pageId) || 0;
+    const newAttempts = currentAttempts + 1;
+    
+    const page = this.pageMap.get(pageId);
+    if (page) {
+      this.attemptsMap.set(pageId, newAttempts);
+      page.attempts = newAttempts;
+      if (newAttempts >= 1) {
+        page.isComplete = true;
+      }
+      this.saveToStorage();    
+    }
+    
+    return newAttempts;
+  }
+
+  public newSession(): void {
     this.pages = this.getDefaultPages();
+    this.attemptsMap.clear();
+    this.initializeAttemptsMap();
     this.saveToStorage();
   }
 
-  public saveToStorage(): void {
-    localStorage.setItem(CaptchaService.STORAGE_KEY, JSON.stringify(this.pages));
+  // Keep existing methods but update the storage to include attempts map
+  private saveToStorage(): void {
+    const attemptsObject = Object.fromEntries(this.attemptsMap);
+    const dataToSave = {
+      ...this.pages,
+      attempts: attemptsObject,
+      timestamp: Date.now()
+    };
+    
+    try {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(dataToSave));
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+      this.alertService.error(
+        'Storage Error',
+        'Failed to save progress. Please ensure cookies are enabled.'
+      );
+    }
   }
 
   private loadFromStorage(): Pages {
-    const data = localStorage.getItem(CaptchaService.STORAGE_KEY);
-    return data ? JSON.parse(data) : this.getDefaultPages();
+    try {
+      const data = localStorage.getItem(this.STORAGE_KEY);
+      if (!data) return this.getDefaultPages();
+
+      const parsedData = JSON.parse(data);
+      
+      if (this.isStorageExpired(parsedData.timestamp)) {
+        this.clearStorage();
+        return this.getDefaultPages();
+      }
+
+      // Restore attempts map from storage
+      if (parsedData.attempts) {
+        this.attemptsMap = new Map(Object.entries(parsedData.attempts));
+      }
+
+      return parsedData;
+    } catch (error) {
+      console.error('Error loading from localStorage:', error);
+      return this.getDefaultPages();
+    }
   }
+
+  private isStorageExpired(timestamp: number): boolean {
+    return Date.now() - timestamp > this.EXPIRY_TIME;
+  }
+
+  private clearStorage(): void {
+    try {
+      localStorage.removeItem(this.STORAGE_KEY);
+    } catch (error) {
+      console.error('Error clearing localStorage:', error);
+    }
+  }
+
+  // ... (keep other existing methods)
 
   private getDefaultPages(): Pages {
     return {
@@ -88,7 +204,7 @@ export class CaptchaService {
             problems: null,
             userInput: '',
             isValid: false,
-            difficulty: Difficulty.Easy,
+            difficulty: null,
           },
         },
         {
@@ -111,40 +227,65 @@ export class CaptchaService {
     }
   }
 
-  nextHandler() {
+  public nextHandler(): boolean {
     this.alertService.clear();
-    if (this.pages.step === 3) return;
-    if (
-      (this.pages.step === 1 && !this.getPage(PageType.Text)?.isComplete) ||
-      (this.pages.step === 2 && !this.getPage(PageType.Math)?.isComplete)
-    ) {
-      this.alertService.warning('Incomplete Step', 'Please complete this step before moving forward.');
-      return;
-    }
-
-    this.pages.step += 1
-    this.saveToStorage()
-  }
-
-  prevHandler() {
-    if (this.pages.step === 1) return;
-    this.pages.step -= 1
-  }
-
-  dispaleSubmitButton(): boolean {
-    return this.pages.step === 3 && this.getPages().every(page => page.isComplete)
-  }
-
-  handleSubmit(e: SubmitEvent) {
-    e.preventDefault();
-    if (!this.dispaleSubmitButton()) {
-      this.alertService.error('Submission Blocked', 'Complete all steps before submitting the form.');
-      return;
-    }
     
-    this.alertService.success('Form Submitted', 'Your form has been submitted successfully.');
-    this.saveToStorage()
-    this.router.navigate(['/results']);
+    if (this.pages.step >= 3) return false;
+    
+    const currentPage = this.getPage(
+      this.pages.step === 1 ? PageType.Text : PageType.Math
+    );
+
+    if (!currentPage?.isComplete) {
+      this.alertService.warning(
+        'Incomplete Step', 
+        'Please complete this step before moving forward.'
+      );
+      return false;
+    }
+
+    this.pages.step += 1;
+    this.saveToStorage();
+    return true;
+  }
+
+  public prevHandler(): boolean {
+    if (this.pages.step === 1) return false;
+    
+    this.pages.step -= 1;
+    return true;
+  }
+
+  public canSubmit(): boolean {
+    return this.pages.step === 3 && 
+           this.getPages().every(page => page.isComplete);
+  }
+
+  public handleSubmit(e: Event) {
+    e.preventDefault();
+    
+    if (!this.canSubmit()) {
+      this.alertService.error(
+        'Submission Blocked', 
+        'Complete all steps before submitting the form.'
+      );
+      return;
+    }
+
+    try {
+      
+      this.alertService.success(
+        'Form Submitted', 
+        'Your form has been submitted successfully.'
+      );
+      this.saveToStorage();
+      this.router.navigate(['/results']);
+    } catch (error) {
+      this.alertService.error(
+        'Submission Failed',
+        'An error occurred while submitting the form. Please try again.'
+      );
+    }
   }
 
   public isTextCaptcha(metadata: any): metadata is ResultCaptchaText {
@@ -158,5 +299,4 @@ export class CaptchaService {
   public isImageCaptcha(metadata: any): metadata is ResultCaptchaImage {
     return metadata && 'imageCptcha' in metadata;
   }
-  
 }

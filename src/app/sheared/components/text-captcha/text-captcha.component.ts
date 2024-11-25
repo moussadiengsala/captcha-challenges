@@ -13,22 +13,40 @@ import { animate, style, transition, trigger } from '@angular/animations';
   templateUrl: './text-captcha.component.html',
   styleUrl: './text-captcha.component.css',
   animations: [
-    trigger('fadeInOut', [
+    trigger('canvas', [
       transition(':enter', [
-        style({ opacity: 0 }),
-        animate('300ms ease-out', style({ opacity: 1 }))
+        style({ transform: 'translateY(-20px)', opacity: 0 }),
+        animate('500ms ease-out', style({ transform: 'translateY(0)', opacity: 1 }))
       ]),
       transition(':leave', [
-        animate('300ms ease-in', style({ opacity: 0 }))
+        animate('500ms ease-in', style({ transform: 'translateY(20px)', opacity: 0 }))
       ])
-    ])
+    ]),
+    trigger('title', [
+      transition(':enter', [
+        style({ transform: 'translateY(-20px)', opacity: 0 }),
+        animate('300ms ease-out', style({ transform: 'translateY(0)', opacity: 1 }))
+      ]),
+      transition(':leave', [
+        animate('300ms ease-in', style({ transform: 'translateY(20px)', opacity: 0 }))
+      ])
+    ]),
+    trigger('header', [
+      transition(':enter', [
+        style({ transform: 'translateY(-20px)', opacity: 0 }),
+        animate('400ms ease-out', style({ transform: 'translateY(0)', opacity: 1 }))
+      ]),
+      transition(':leave', [
+        animate('400ms ease-in', style({ transform: 'translateY(20px)', opacity: 0 }))
+      ])
+    ]),
   ]
 })
 export class TextCaptchaComponent {
   captcha = signal('');
   userInput = new FormControl('');
   canvas: WritableSignal<HTMLCanvasElement | null> = signal(null);
-  isValid = signal(false);
+  // isValid = signal(false);
   page?: Page;
 
   constructor(
@@ -46,14 +64,13 @@ export class TextCaptchaComponent {
   private initializeCaptcha(): void {
     this.page = this.captchaService.getPage(PageType.Text);
 
-    if (!this.captchaService.isTextCaptcha(this.page?.metadata)) {
-      this.alertService.error('Initialization Error', 'Failed to initialize the captcha. Please try again later.');
+    if (!this.page || !this.captchaService.isTextCaptcha(this.page?.metadata)) {
+      this.alertService.error('Verification Error', 'Captcha page is not initialized. Please refresh the page.');
       return;
     }
 
-    const previousCaptchaCode = this.page.metadata.captchaCode || '';
+    const previousCaptchaCode = this.page.metadata.captchaCode.trim() || '';
     const newCaptchaCode = previousCaptchaCode.length > 0 ? previousCaptchaCode : generateTextCaptcha();
-
     this.captcha.set(newCaptchaCode);
     this.page.metadata.captchaCode = newCaptchaCode;
 
@@ -61,95 +78,86 @@ export class TextCaptchaComponent {
     this.canvas.set(canvasElement);
     drawTextCaptcha(this.canvas, this.captcha());
 
-    this.isValid.set(this.page.metadata.isValid || false);
-    this.userInput.setValue(this.page.metadata.userInput || '');
+    this.userInput.reset()
+    this.userInput.setValue(this.page.metadata.userInput.trim() || '');
 
-    this.subscribeToInputChanges();
-  }
+    this.page.metadata.isValid = this.userInput.value === this.page.metadata.captchaCode
 
-  private subscribeToInputChanges(): void {
-    this.userInput.valueChanges.subscribe((value) => {
-      if (!this.captchaService.isTextCaptcha(this.page?.metadata)) {
-        this.alertService.error('Error', 'Captcha validation failed. Please refresh the page.');
-        return;
-      }
-
-      if (this.page.isComplete) return;
-      this.page.metadata.userInput = value?.trim() || '';
-    });
-  }
-
-  refreshCaptcha(): void {
-    if (this.page?.isComplete) {
-      this.alertService.warning('Locked Out', 'You cannot refresh the captcha after completing or exceeding the maximum attempts.');
+    if (this.captchaService.isPageLocked(this.page.id)) {
+      this.alertService.warning('Locked Out', 'You have reached the maximum attempts or already complete this challenge. Proceed to the next challenge.');
       return;
     }
-
-    this.captchaService.resetPages(PageType.Text);
-    this.page = this.captchaService.getPage(PageType.Text);
-    if (!this.captchaService.isTextCaptcha(this.page?.metadata)) {
-      this.alertService.error('Refresh Error', 'Unable to refresh the captcha. Please try again.');
-      return;
-    }
-
-    const newCaptchaCode = generateTextCaptcha();
-    this.captcha.set(newCaptchaCode);
-    this.page.metadata.captchaCode = newCaptchaCode;
-
-    this.userInput.reset();
-    drawTextCaptcha(this.canvas, this.captcha());
-    this.alertService.info('Captcha Refreshed', 'A new captcha has been successfully generated.');
   }
 
   verify(): void {
-    if (this.page?.isComplete) {
-      this.alertService.warning('Locked Out', 'You have already complet or reached the maximum attempts. Proceed to the next challenge.');
-      return;
-    }
-
     if (!this.page) {
       this.alertService.error('Verification Error', 'Captcha page is not initialized. Please refresh the page.');
       return;
     }
 
+    if (this.captchaService.isPageLocked(this.page.id)) {
+      this.alertService.warning('Locked Out', 'You have reached the maximum attempts or already complete this challenge. Proceed to the next challenge.');
+      return;
+    }
+
     const userInputValue = this.userInput.value?.trim() || '';
-    const isValid = this.captcha() === userInputValue;
-    const maxAttempts = this.captchaService.getMaxAttempts();
-    this.page.attempts += 1;
+    this.page.metadata.userInput = userInputValue;
+    this.page.metadata.isValid = this.captcha() === userInputValue;
     
-    if (!isValid) {
-      this.handleFailedVerification(maxAttempts);
+    // Increment attempts and get new count
+    const currentAttempts = this.captchaService.incrementAttempts(this.page.id);
+    
+    if (!this.page.metadata.isValid) {
+      this.handleFailedVerification(currentAttempts);
       return;
     }
 
     this.handleSuccessfulVerification();
   }
 
-  private handleFailedVerification(maxAttempts: number): void {
-    if (this.page) {
+  private handleFailedVerification(currentAttempts: number): void {
+    if (!this.page) return;
 
-      if (this.page.attempts >= maxAttempts) {
-        this.page.isComplete = true;
-        this.page.metadata.isValid = false;
-        this.alertService.warning(
-          'Maximum Attempts Reached',
-          'You have exceeded the maximum number of attempts. You can proceed to the next challenge or refresh this one.'
-        );
-        return;
-      }
+    const remainingAttempts = this.captchaService.getRemainingAttempts(this.page.id);
 
-      this.userInput.reset()
-      this.page.metadata.userInput = ''
-      this.alertService.error('Verification Failed', 'Incorrect captcha code. Please try again.');
+    if (remainingAttempts <= 0) {
+      this.alertService.warning(
+        'Maximum Attempts Reached',
+        'You have exceeded the maximum number of attempts. You can proceed to the next challenge or refresh this one.'
+      );
+      return;
     }
+
+    this.userInput.reset();
+    this.page.metadata.userInput = '';
+    this.alertService.error(
+      'Verification Failed', 
+      `Incorrect captcha code. You have ${remainingAttempts} attempts remaining.`
+    );
   }
 
   private handleSuccessfulVerification(): void {
-    if (this.page) {
-      this.alertService.success('Verification Successful', 'The captcha code is correct. Click "Next" to continue.');
-      this.page.isComplete = true;
-      this.page.metadata.isValid = true;
-      this.userInput.reset();
+    if (!this.page) return;
+    
+    this.alertService.success('Verification Successful', 'The captcha code is correct. Click "Next" to continue.');
+    this.userInput.reset();
+  }
+
+  refreshCaptcha(): void {
+    if (!this.page) return;
+
+    if (this.captchaService.isPageLocked(this.page.id)) {
+      this.alertService.warning('Locked Out', 'You cannot refresh the captcha after reaching the maximum attempts or completing the task.');
+      return;
     }
+
+    this.captchaService.resetPages(PageType.Text);
+    this.initializeCaptcha()
+    
+    const remainingAttempts = this.captchaService.getRemainingAttempts(this.page.id);
+    this.alertService.info(
+      'Captcha Refreshed', 
+      `A new captcha has been generated. You have ${remainingAttempts} attempts remaining.`
+    );
   }
 }

@@ -1,17 +1,15 @@
->
-
 
 
 
 <div class="w-full mx-auto px-6 mb-6">
   <div class="mb-7">
-      <h1 class="text-2xl text-center font-semibold text-gray-800">{{page?.title}}</h1> 
-      <p class="text-center text-gray-600">{{page?.header}}</p>
+      <h1 class="text-2xl text-center font-semibold text-gray-800" [@title]>{{page?.title}}</h1> 
+      <p class="text-center text-gray-600" [@header]>{{page?.header}}</p>
   </div>
 
   <div class="p-6">
     <!-- Challenge Message -->
-    <div class="mb-4 text-center text-gray-700 font-medium">
+    <div class="mb-4 text-center text-gray-700 font-medium" [@message]>
       {{ challenge()?.challenge?.message }}
     </div>
 
@@ -32,7 +30,7 @@
         Refresh
       </button>
       
-      <button type="button" (click)="verify()" class="px-6 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg transition-colors duration-200">
+      <button type="button" (click)="verify()" class="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all">
         Verify
       </button>
     </div>

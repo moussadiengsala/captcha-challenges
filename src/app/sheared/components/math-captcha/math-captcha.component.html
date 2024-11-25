@@ -1,11 +1,11 @@
 <div class="max-w-4xl mx-auto px-6 mb-6">
   <div class="mb-7">
-    <h1 class="text-2xl text-center font-semibold text-gray-800">{{page?.title}}</h1> 
-    <p class="text-center text-gray-600">{{page?.header}}</p>
+    <h1 class="text-2xl text-center font-semibold text-gray-800" [@title]>{{page?.title}}</h1> 
+    <p class="text-center text-gray-600" [@header]>{{page?.header}}</p>
   </div>
 
     <!-- Problem Display -->
-    <div class="flex items-center justify-center space-x-4 mb-6">
+    <div class="flex items-center justify-center space-x-4 mb-6" [@numberChange]>
       <span class="text-3xl font-bold text-gray-700">{{ problem()?.num1 }}</span>
       <span class="text-3xl font-medium text-gray-600">{{ problem()?.operator }}</span>
       <span class="text-3xl font-bold text-gray-700">{{ problem()?.num2 }}</span>
@@ -42,7 +42,7 @@
           <button
             type="button"
             *ngFor="let level of [Difficulty.Easy, Difficulty.Normal, Difficulty.Hard]"
-            (click)="changeDifficulty(level)"
+            (click)="toggleDifficulty(level)"
             class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
           >
             {{ level }}
